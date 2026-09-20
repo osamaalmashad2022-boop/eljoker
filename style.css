@@ -2406,3 +2406,20 @@ body.menu-open .floating-whatsapp,
     height: 26px;
   }
 }
+
+/* Discreet Admin Portal Link */
+.admin-portal-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  transition: var(--transition-fast);
+  opacity: 0.7;
+}
+
+.admin-portal-link:hover {
+  color: var(--gold-light);
+  opacity: 1;
+}

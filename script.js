@@ -239,19 +239,108 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* --------------------------------------------------------------------------
-     4. PORTFOLIO FILTER TABS
+     4. DYNAMIC GALLERY LOADER & PORTFOLIO FILTER TABS
      -------------------------------------------------------------------------- */
+  const galleryGrid = document.getElementById('galleryGrid');
   const filterBtns = document.querySelectorAll('.filter-btn');
-  const galleryItems = document.querySelectorAll('.gallery-item');
 
+  const CATEGORY_LABELS = {
+    wedding: 'أفراح ومناسبات',
+    portrait: 'جلسات وبورتريه',
+    video: 'فيديو وتغطيات',
+    retouch: 'تعديل وتفاصيل'
+  };
+
+  // Helper to render dynamic items into the gallery
+  const renderDynamicGallery = (items) => {
+    if (!galleryGrid || !items || items.length === 0) return;
+
+    galleryGrid.innerHTML = items.map((item) => {
+      const tagText = CATEGORY_LABELS[item.category] || item.category;
+      return `
+        <div class="gallery-item" data-category="${item.category}" tabindex="0">
+          <div class="gallery-img-box">
+            <img src="${item.src}" alt="${item.caption || 'عمل من استوديو الجوكر'}" loading="lazy">
+            <div class="gallery-overlay">
+              <span class="gallery-tag">${tagText}</span>
+              <h4 class="gallery-caption">${item.caption || ''}</h4>
+              <p class="gallery-subcaption">${item.subcaption || ''}</p>
+              <div class="gallery-zoom-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    bindGalleryInteractions();
+  };
+
+  // Attempt to load dynamic gallery from Cloudinary or synchronized localStorage
+  const loadDynamicGallery = async () => {
+    let loadedFromStorage = false;
+    try {
+      const saved = localStorage.getItem('joker_gallery_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          renderDynamicGallery(parsed);
+          loadedFromStorage = true;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read saved gallery items from localStorage:', e);
+    }
+
+    // Try fetching fresh Cloudinary list if not offline
+    try {
+      const configStr = localStorage.getItem('joker_cloudinary_config');
+      const config = configStr ? JSON.parse(configStr) : { cloudName: 'qrif7qmf', galleryTag: 'joker-gallery' };
+      const res = await fetch(`https://res.cloudinary.com/${config.cloudName}/image/list/${config.galleryTag}.json?t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.resources) && data.resources.length > 0) {
+          const deletedIds = JSON.parse(localStorage.getItem('joker_gallery_deleted') || '[]');
+          const cloudItems = data.resources
+            .filter(r => !deletedIds.includes(r.public_id))
+            .map(r => {
+              const custom = (r.context && r.context.custom) || {};
+              let cat = custom.category || 'wedding';
+              if (r.tags && Array.isArray(r.tags)) {
+                const found = ['wedding', 'portrait', 'video', 'retouch'].find(c => r.tags.includes(c));
+                if (found) cat = found;
+              }
+              return {
+                id: r.public_id,
+                src: `https://res.cloudinary.com/${config.cloudName}/image/upload/q_auto,f_auto,w_1200/v${r.version}/${r.public_id}.${r.format}`,
+                category: cat,
+                caption: custom.caption || `عمل استوديو الجوكر #${r.public_id.slice(-4)}`,
+                subcaption: custom.subcaption || 'تصوير وإخراج احترافي — استوديو الجوكر',
+                source: 'cloudinary'
+              };
+            });
+
+          if (cloudItems.length > 0) {
+            renderDynamicGallery(cloudItems);
+          }
+        }
+      }
+    } catch (err) {
+      // If network fails or resource list is restricted, we already gracefully rendered localStorage or fallback static HTML
+    }
+  };
+
+  // Filter click handler
   filterBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       filterBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
 
       const filterValue = btn.getAttribute('data-filter');
+      const items = document.querySelectorAll('.gallery-item');
 
-      galleryItems.forEach((item) => {
+      items.forEach((item) => {
         const itemCategory = item.getAttribute('data-category');
         if (filterValue === 'all' || itemCategory === filterValue) {
           item.style.display = 'block';
@@ -331,31 +420,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showNextImage = () => {
     const items = visibleGalleryItems();
+    if (items.length === 0) return;
     currentGalleryIndex = (currentGalleryIndex + 1) % items.length;
     openLightbox(currentGalleryIndex);
   };
 
   const showPrevImage = () => {
     const items = visibleGalleryItems();
+    if (items.length === 0) return;
     currentGalleryIndex = (currentGalleryIndex - 1 + items.length) % items.length;
     openLightbox(currentGalleryIndex);
   };
 
-  galleryItems.forEach((item) => {
-    item.addEventListener('click', () => {
-      const items = visibleGalleryItems();
-      const index = items.indexOf(item);
-      openLightbox(index);
-    });
-
-    item.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const items = visibleGalleryItems();
-        const index = items.indexOf(item);
+  const bindGalleryInteractions = () => {
+    const items = document.querySelectorAll('.gallery-item');
+    items.forEach((item) => {
+      item.onclick = () => {
+        const activeItems = visibleGalleryItems();
+        const index = activeItems.indexOf(item);
         openLightbox(index);
-      }
+      };
+
+      item.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          const activeItems = visibleGalleryItems();
+          const index = activeItems.indexOf(item);
+          openLightbox(index);
+        }
+      };
     });
-  });
+  };
+
+  // Initial binding for static items
+  bindGalleryInteractions();
+
+  // Trigger dynamic loader
+  loadDynamicGallery();
 
   if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
   if (lightboxNext) lightboxNext.addEventListener('click', showNextImage);
