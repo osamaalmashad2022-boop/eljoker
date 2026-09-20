@@ -88,7 +88,14 @@
           <span id="cloudStatusText">متصل بـ Cloudinary</span>
         </div>
 
-        <div class="admin-nav-actions">
+          <a href="#watermarkSection" class="btn btn-secondary" title="أداة العلامة المائية وحفظ الحقوق">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            <span>أداة العلامة المائية</span>
+          </a>
+
           <button class="btn btn-secondary" onclick="openSettingsModal()" title="إعدادات السحابة">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3"></circle>
@@ -271,6 +278,351 @@
         </form>
       </section>
 
+      <!-- =====================================================================
+           WATERMARK & COPYRIGHT TOOL SECTION
+           ===================================================================== -->
+      <section class="watermark-section-card" id="watermarkSection">
+        <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div class="watermark-header-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span>حماية حقوق المصور والملكية الفكرية</span>
+            </div>
+            <h2 class="card-title">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+              <span>أداة دمج العلامة المائية الاحترافية</span>
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+              إضافة ختم وشعار استوديو الجوكر أو نص مخصص على الصور بدقة عالية مع معالجة فورية بالمتصفح
+            </p>
+          </div>
+
+          <div class="watermark-mode-switcher">
+            <button type="button" class="mode-switch-btn active" id="modeSingleBtn" onclick="switchWatermarkMode('single')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <span>صورة مفردة</span>
+            </button>
+            <button type="button" class="mode-switch-btn" id="modeBatchBtn" onclick="switchWatermarkMode('batch')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="16" height="15" rx="2" ry="2"></rect>
+                <path d="M6 3h14a2 2 0 0 1 2 2v13"></path>
+              </svg>
+              <span>دفعة صور (Batch)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="watermark-layout">
+          <!-- Right: Controls -->
+          <div class="watermark-controls-area">
+            
+            <!-- 1. Source Image Picker -->
+            <div class="control-panel-card">
+              <div class="control-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>1. اختيار الصورة المراد حمايتها</span>
+              </div>
+
+              <input type="file" id="wmFileInput" accept="image/*" style="display: none;" onchange="handleWmFileSelected(event)">
+              <input type="file" id="wmBatchFileInput" accept="image/*" multiple style="display: none;" onchange="handleWmBatchFilesSelected(event)">
+
+              <div class="source-options-row">
+                <button type="button" class="btn btn-secondary" onclick="triggerWmFileInput()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span id="wmFileSelectBtnText">رفع صورة من الجهاز</span>
+                </button>
+
+                <button type="button" class="btn btn-secondary" onclick="openGalleryPickerModal()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <span>اختيار من المعرض</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Watermark Type & Content -->
+            <div class="control-panel-card">
+              <div class="control-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <span>2. نوع ومحتوى العلامة المائية</span>
+              </div>
+
+              <!-- Type switcher -->
+              <div class="wm-type-tabs">
+                <button type="button" class="wm-type-btn active" id="wmTypeTextBtn" onclick="setWatermarkType('text')">
+                  نص مخصص
+                </button>
+                <button type="button" class="wm-type-btn" id="wmTypeLogoBtn" onclick="setWatermarkType('logo')">
+                  شعار الاستوديو
+                </button>
+                <button type="button" class="wm-type-btn" id="wmTypeCustomLogoBtn" onclick="setWatermarkType('customLogo')">
+                  شعار خاص (PNG)
+                </button>
+              </div>
+
+              <!-- Text Controls -->
+              <div id="wmTextControls">
+                <div class="form-group">
+                  <label for="wmTextInput" class="form-label">نص العلامة المائية</label>
+                  <input type="text" id="wmTextInput" class="form-input" value="© استوديو الجوكر للتصوير" oninput="triggerWatermarkRender()">
+                </div>
+
+                <!-- Preset Quick Buttons -->
+                <div class="preset-pills-row">
+                  <button type="button" class="preset-pill-btn" onclick="setWmPresetText('© استوديو الجوكر للتصوير')">© استوديو الجوكر</button>
+                  <button type="button" class="preset-pill-btn" onclick="setWmPresetText('استوديو الجوكر للتصوير | 01017734133')">الجوكر + الهاتف</button>
+                  <button type="button" class="preset-pill-btn" onclick="setWmPresetText('EL JOKER PHOTOGRAPHY • ALL RIGHTS RESERVED')">English Official</button>
+                  <button type="button" class="preset-pill-btn" onclick="setWmPresetText('بروفة غير مصرح بالنشر • استوديو الجوكر')">بروفة حصرية</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="wmTextColor" class="form-label">لون النص</label>
+                    <select id="wmTextColor" class="form-select" onchange="triggerWatermarkRender()">
+                      <option value="#fbe089" selected>ذهبي استوديو (Gold)</option>
+                      <option value="#ffffff">أبيض ناصع (White)</option>
+                      <option value="#e5a93c">ذهبي كلاسيكي</option>
+                      <option value="#111111">أسود فاحم (Dark)</option>
+                      <option value="#ef4444">أحمر تحذيري (Red)</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="wmTextStyle" class="form-label">تأثير النص</label>
+                    <select id="wmTextStyle" class="form-select" onchange="triggerWatermarkRender()">
+                      <option value="shadow" selected>ظل غامق ناعم (Shadow)</option>
+                      <option value="stroke">إطار محدد (Outline)</option>
+                      <option value="pill">شريط زجاجي خلفي (Glass Tag)</option>
+                      <option value="plain">نص خالص بدون تأثير</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Studio Logo Controls -->
+              <div id="wmLogoControls" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-surface); border-radius: 8px; border: 1px solid var(--border-subtle);">
+                  <img src="assets/joker-logo.jpg" alt="شعار الجوكر" style="width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--gold-primary); object-fit: cover;">
+                  <div>
+                    <strong style="font-size: 0.9rem; color: var(--gold-light); display: block;">شعار استوديو الجوكر الرسمي</strong>
+                    <span style="font-size: 0.78rem; color: var(--text-secondary);">دمج احترافي مع المحافظة على دقة الأبعاد والشفافية</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom Logo Controls -->
+              <div id="wmCustomLogoControls" style="display: none;">
+                <input type="file" id="wmCustomLogoFile" accept="image/*" style="display: none;" onchange="handleCustomLogoSelected(event)">
+                <button type="button" class="btn btn-secondary btn-block" onclick="document.getElementById('wmCustomLogoFile').click()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span id="wmCustomLogoBtnText">رفع شعار شفاف (PNG/SVG)</span>
+                </button>
+                <div id="customLogoThumbBox" style="display: none; align-items: center; gap: 0.75rem; margin-top: 0.75rem;">
+                  <img id="customLogoThumbImg" src="" alt="شعار مخصص" style="width: 44px; height: 44px; border-radius: 6px; object-fit: contain; background: #000; border: 1px solid var(--border-subtle);">
+                  <span id="customLogoName" style="font-size: 0.8rem; color: var(--text-secondary);"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Position & Margins -->
+            <div class="control-panel-card">
+              <div class="control-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="5 9 2 12 5 15"></polyline>
+                  <polyline points="9 5 12 2 15 5"></polyline>
+                  <polyline points="15 19 12 22 9 19"></polyline>
+                  <polyline points="19 9 22 12 19 15"></polyline>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <line x1="12" y1="2" x2="12" y2="22"></line>
+                </svg>
+                <span>3. موضع العلامة المائية</span>
+              </div>
+
+              <div class="position-grid-container" id="wmPosGrid">
+                <!-- 3x3 positions: RTL grid (right, center, left) -->
+                <button type="button" class="pos-btn" data-pos="top-right" onclick="setWatermarkPosition('top-right')" title="أعلى اليمين"><span class="pos-dot"></span></button>
+                <button type="button" class="pos-btn" data-pos="top-center" onclick="setWatermarkPosition('top-center')" title="أعلى المنتصف"><span class="pos-dot"></span></button>
+                <button type="button" class="pos-btn" data-pos="top-left" onclick="setWatermarkPosition('top-left')" title="أعلى اليسار"><span class="pos-dot"></span></button>
+
+                <button type="button" class="pos-btn" data-pos="middle-right" onclick="setWatermarkPosition('middle-right')" title="وسط اليمين"><span class="pos-dot"></span></button>
+                <button type="button" class="pos-btn" data-pos="center" onclick="setWatermarkPosition('center')" title="المركز والوسط"><span class="pos-dot"></span></button>
+                <button type="button" class="pos-btn" data-pos="middle-left" onclick="setWatermarkPosition('middle-left')" title="وسط اليسار"><span class="pos-dot"></span></button>
+
+                <button type="button" class="pos-btn active" data-pos="bottom-right" onclick="setWatermarkPosition('bottom-right')" title="أسفل اليمين (افتراضي)"><span class="pos-dot"></span></button>
+                <button type="button" class="pos-btn" data-pos="bottom-center" onclick="setWatermarkPosition('bottom-center')" title="أسفل المنتصف"><span class="pos-dot"></span></button>
+                <button type="button" class="pos-btn" data-pos="bottom-left" onclick="setWatermarkPosition('bottom-left')" title="أسفل اليسار"><span class="pos-dot"></span></button>
+              </div>
+
+              <div class="slider-control-group" style="margin-top: 1rem; margin-bottom: 0;">
+                <div class="slider-label-row">
+                  <span>المسافة من الحافة (Margin)</span>
+                  <span class="slider-val-badge" id="wmMarginVal">5%</span>
+                </div>
+                <input type="range" id="wmMarginSlider" class="gold-slider" min="1" max="15" value="5" oninput="updateMarginValue(this.value)">
+              </div>
+            </div>
+
+            <!-- 4. Opacity, Size & Rotation -->
+            <div class="control-panel-card">
+              <div class="control-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 2a7 7 0 0 0 0 14v6"></path>
+                </svg>
+                <span>4. الشفافية والحجم والدوران</span>
+              </div>
+
+              <!-- Opacity -->
+              <div class="slider-control-group">
+                <div class="slider-label-row">
+                  <span>الشفافية (Opacity)</span>
+                  <span class="slider-val-badge" id="wmOpacityVal">70%</span>
+                </div>
+                <input type="range" id="wmOpacitySlider" class="gold-slider" min="10" max="100" value="70" oninput="updateOpacityValue(this.value)">
+              </div>
+
+              <!-- Size -->
+              <div class="slider-control-group">
+                <div class="slider-label-row">
+                  <span>الحجم النسبي (Scale)</span>
+                  <span class="slider-val-badge" id="wmScaleVal">100%</span>
+                </div>
+                <input type="range" id="wmScaleSlider" class="gold-slider" min="30" max="250" value="100" oninput="updateScaleValue(this.value)">
+              </div>
+
+              <!-- Rotation -->
+              <div class="slider-control-group" style="margin-bottom: 0.5rem;">
+                <div class="slider-label-row">
+                  <span>زاوية الدوران (Rotation)</span>
+                  <span class="slider-val-badge" id="wmRotateVal">0°</span>
+                </div>
+                <input type="range" id="wmRotateSlider" class="gold-slider" min="-90" max="90" value="0" oninput="updateRotateValue(this.value)">
+              </div>
+
+              <!-- Tiled / Full Diagonal Pattern Protection Toggle -->
+              <div class="custom-toggle-row">
+                <div>
+                  <strong style="font-size: 0.88rem; color: var(--gold-light); display: block;">حماية قُطرية متكررة (Tiled Pattern)</strong>
+                  <span style="font-size: 0.78rem; color: var(--text-secondary);">تكرار العلامة على كامل الصورة بزاوية مائلة لمنع السرقة والنسخ</span>
+                </div>
+                <label class="custom-switch">
+                  <input type="checkbox" id="wmPatternToggle" onchange="triggerWatermarkRender()">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Left: Preview Canvas & Actions -->
+          <div class="watermark-preview-area">
+            <div class="watermark-canvas-box" id="watermarkCanvasBox">
+              <!-- Placeholder when no image loaded -->
+              <div class="canvas-placeholder-state" id="canvasPlaceholder">
+                <svg class="canvas-placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <h4 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 0.4rem;">معاينة فورية بدقة كاملة</h4>
+                <p style="font-size: 0.85rem; max-width: 320px; line-height: 1.5;">قم برفع صورة أو اختيارها من المعرض لمعاينة دمج العلامة المائية وضبط الإعدادات لحظياً</p>
+                <button type="button" class="btn btn-primary" style="margin-top: 1.25rem;" onclick="triggerWmFileInput()">
+                  <span>رفع صورة الآن</span>
+                </button>
+              </div>
+
+              <!-- Live Canvas -->
+              <canvas id="watermarkCanvas"></canvas>
+            </div>
+
+            <!-- Canvas Status / Info Bar -->
+            <div class="canvas-status-bar" id="canvasStatusBar" style="display: none;">
+              <div>
+                <span>أبعاد الصورة الأصلية: </span>
+                <span class="res-pill" id="wmOriginalRes">—</span>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span id="wmProcessingStatus" style="color: var(--color-success); font-size: 0.75rem;">جاهز للتحميل</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="preview-action-buttons">
+              <button type="button" class="btn btn-primary" id="downloadWmBtn" onclick="downloadWatermarkedImage()" disabled>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>تحميل الصورة المحمية</span>
+              </button>
+
+              <button type="button" class="btn btn-secondary" id="sendToUploadBtn" onclick="sendWatermarkedToUpload()" disabled title="إرسال الصورة المختومة مباشرة إلى نموذج الرفع السحابي بالأعلى">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                </svg>
+                <span>إرسال لنموذج الرفع</span>
+              </button>
+            </div>
+
+            <!-- Batch Processing Queue Box -->
+            <div class="batch-queue-box" id="batchQueueBox">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h4 style="color: var(--gold-light); font-size: 0.95rem;">قائمة الصور للمعالجة الجماعية (<span id="batchCountBadge">0</span>)</h4>
+                <button type="button" class="btn btn-primary btn-sm" id="processBatchBtn" onclick="processAndDownloadBatch()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>بدء معالجة وتحميل الكل</span>
+                </button>
+              </div>
+
+              <div class="progress-box" id="batchProgressBarBox" style="margin-bottom: 0.75rem;">
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="batchProgressBar" style="width: 0%;"></div>
+                </div>
+                <div class="progress-labels">
+                  <span id="batchStatusText">جاهز...</span>
+                  <span id="batchPercentText">0%</span>
+                </div>
+              </div>
+
+              <div class="batch-queue-list" id="batchQueueList">
+                <!-- Batch items rendered dynamically -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       <!-- Gallery Management Section -->
       <section class="gallery-management-card">
         <div class="gallery-toolbar">
@@ -428,6 +780,28 @@
           </div>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Gallery Picker Modal (Watermark tool) -->
+  <div class="modal-backdrop" id="galleryPickerModal">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">اختر صورة من معرض الموقع لتطبيق العلامة المائية</h3>
+        <button class="modal-close-btn" onclick="closeGalleryPickerModal()">&times;</button>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        انقر على أي صورة لتحميلها مباشرة إلى محرر العلامة المائية:
+      </p>
+
+      <div class="gallery-picker-grid" id="galleryPickerGrid">
+        <!-- Dynamically populated from galleryItems -->
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeGalleryPickerModal()">إغلاق</button>
+      </div>
     </div>
   </div>
 
