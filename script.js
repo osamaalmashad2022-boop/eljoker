@@ -5,6 +5,17 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // HTML sanitization helper to prevent XSS in dynamic templates
+  const escapeHtml = (str) => {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   // Set current copyright year
   const currentYearEl = document.getElementById('currentYear');
   if (currentYearEl) {
@@ -12,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* --------------------------------------------------------------------------
-     1. PARTICLES CANVAS ANIMATION (GOLD AMBIENT DUST)
+     1. PARTICLES CANVAS ANIMATION (GOLD AMBIENT DUST) — OPTIMIZED
      -------------------------------------------------------------------------- */
   const canvas = document.getElementById('particles-canvas');
   if (canvas) {
@@ -25,8 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
       height = canvas.height = window.innerHeight;
     });
 
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const particles = [];
-    const particleCount = Math.min(Math.floor(window.innerWidth / 20), 65);
+    const particleCount = prefersReducedMotion ? 0 : Math.min(Math.floor(window.innerWidth / 25), 55);
 
     class Particle {
       constructor() {
@@ -36,10 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
       reset() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.size = Math.random() * 2.2 + 0.6;
-        this.speedX = (Math.random() - 0.5) * 0.4;
-        this.speedY = -Math.random() * 0.5 - 0.2; // float upwards
-        this.alpha = Math.random() * 0.7 + 0.2;
+        this.size = Math.random() * 2.0 + 0.6;
+        this.speedX = (Math.random() - 0.5) * 0.35;
+        this.speedY = -Math.random() * 0.45 - 0.15; // float upwards
+        this.alpha = Math.random() * 0.65 + 0.2;
         this.color = Math.random() > 0.3 ? '229, 169, 60' : '251, 224, 137'; // gold tones
       }
 
@@ -56,13 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       draw() {
+        // High-performance soft glow without context shadowBlur thrashing
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${this.color}, ${this.alpha * 0.22})`;
+        ctx.fill();
+
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = `rgba(${this.color}, 0.8)`;
         ctx.fill();
-        ctx.shadowBlur = 0;
       }
     }
 
@@ -70,16 +85,40 @@ document.addEventListener('DOMContentLoaded', () => {
       particles.push(new Particle());
     }
 
-    function animateParticles() {
+    let isCanvasVisible = true;
+    let animFrameId = null;
+
+    function renderParticles() {
       ctx.clearRect(0, 0, width, height);
-      particles.forEach((p) => {
-        p.update();
-        p.draw();
-      });
-      requestAnimationFrame(animateParticles);
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
+      }
+      if (isCanvasVisible) {
+        animFrameId = requestAnimationFrame(renderParticles);
+      } else {
+        animFrameId = null;
+      }
     }
 
-    animateParticles();
+    // Only run animation loop when hero is visible in viewport
+    const heroEl = document.getElementById('hero') || canvas;
+    if ('IntersectionObserver' in window && heroEl) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          isCanvasVisible = entry.isIntersecting;
+          if (isCanvasVisible && !animFrameId && particles.length > 0) {
+            animFrameId = requestAnimationFrame(renderParticles);
+          } else if (!isCanvasVisible && animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+          }
+        });
+      }, { threshold: 0.05 });
+      observer.observe(heroEl);
+    } else if (particles.length > 0) {
+      animFrameId = requestAnimationFrame(renderParticles);
+    }
   }
 
   /* --------------------------------------------------------------------------
@@ -256,15 +295,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!galleryGrid || !items || items.length === 0) return;
 
     galleryGrid.innerHTML = items.map((item) => {
-      const tagText = CATEGORY_LABELS[item.category] || item.category;
+      const rawCategory = item.category || 'wedding';
+      const safeCategory = escapeHtml(rawCategory);
+      const tagText = escapeHtml(CATEGORY_LABELS[rawCategory] || rawCategory);
+      const safeSrc = escapeHtml(item.src || '');
+      const rawCaption = item.caption || 'عمل من استوديو الجوكر';
+      const safeCaption = escapeHtml(rawCaption);
+      const safeSubcaption = escapeHtml(item.subcaption || '');
+
       return `
-        <div class="gallery-item" data-category="${item.category}" tabindex="0">
+        <div class="gallery-item" data-category="${safeCategory}" tabindex="0">
           <div class="gallery-img-box">
-            <img src="${item.src}" alt="${item.caption || 'عمل من استوديو الجوكر'}" loading="lazy">
+            <img src="${safeSrc}" alt="${safeCaption}" loading="lazy">
             <div class="gallery-overlay">
               <span class="gallery-tag">${tagText}</span>
-              <h4 class="gallery-caption">${item.caption || ''}</h4>
-              <p class="gallery-subcaption">${item.subcaption || ''}</p>
+              <h4 class="gallery-caption">${safeCaption}</h4>
+              <p class="gallery-subcaption">${safeSubcaption}</p>
               <div class="gallery-zoom-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
               </div>
@@ -360,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* --------------------------------------------------------------------------
-     5. LIGHTBOX MODAL
+     5. LIGHTBOX MODAL & ACCESSIBLE FOCUS MANAGEMENT
      -------------------------------------------------------------------------- */
   const lightbox = document.getElementById('lightboxModal');
   const lightboxImg = document.getElementById('lightboxImg');
@@ -371,10 +417,63 @@ document.addEventListener('DOMContentLoaded', () => {
   const lightboxNext = document.getElementById('lightboxNext');
 
   let currentGalleryIndex = 0;
+  let lastFocusedElement = null;
+
   const visibleGalleryItems = () =>
     Array.from(document.querySelectorAll('.gallery-item')).filter(
       (item) => item.style.display !== 'none'
     );
+
+  const getFocusableModalElements = () => {
+    if (!lightbox) return [];
+    return Array.from(
+      lightbox.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null);
+  };
+
+  const trapLightboxFocus = (e) => {
+    if (!lightbox || !lightbox.classList.contains('active')) return;
+    if (e.key !== 'Tab') return;
+
+    const focusable = getFocusableModalElements();
+    if (focusable.length === 0) {
+      e.preventDefault();
+      return;
+    }
+
+    const firstEl = focusable[0];
+    const lastEl = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstEl || document.activeElement === lightbox) {
+        e.preventDefault();
+        lastEl.focus();
+      }
+    } else {
+      if (document.activeElement === lastEl) {
+        e.preventDefault();
+        firstEl.focus();
+      }
+    }
+  };
+
+  const activateLightboxModal = () => {
+    if (!lightbox) return;
+    lastFocusedElement = document.activeElement;
+    lightbox.setAttribute('aria-hidden', 'false');
+    lightbox.classList.add('active');
+    document.body.classList.add('lightbox-open');
+    document.body.style.overflow = 'hidden';
+
+    // Focus close button for accessible keyboard users
+    setTimeout(() => {
+      if (lightboxClose) {
+        lightboxClose.focus();
+      }
+    }, 40);
+
+    document.addEventListener('keydown', trapLightboxFocus);
+  };
 
   const openLightbox = (index) => {
     const items = visibleGalleryItems();
@@ -386,36 +485,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const caption = currentItem.querySelector('.gallery-caption');
     const tag = currentItem.querySelector('.gallery-tag');
 
-    if (lightbox) lightbox.classList.remove('is-single-preview');
-    lightboxImg.src = img.src;
-    lightboxImg.alt = img.alt;
-    lightboxTitle.textContent = caption ? caption.textContent : '';
-    lightboxCategory.textContent = tag ? tag.textContent : '';
+    if (lightbox) {
+      lightbox.classList.remove('is-single-preview', 'is-logo-preview', 'is-hero-preview');
+    }
+    if (lightboxImg && img) {
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt || 'معاينة صورة من معرض الجوكر للتصوير';
+    }
+    if (lightboxTitle) lightboxTitle.textContent = caption ? caption.textContent : '';
+    if (lightboxCategory) lightboxCategory.textContent = tag ? tag.textContent : '';
 
-    lightbox.classList.add('active');
-    document.body.classList.add('lightbox-open');
-    document.body.style.overflow = 'hidden';
+    activateLightboxModal();
   };
 
   const openSingleImageLightbox = (src, alt, title, category) => {
     if (!lightbox) return;
     lightbox.classList.add('is-single-preview');
-    lightboxImg.src = src;
-    lightboxImg.alt = alt || '';
-    lightboxTitle.textContent = title || '';
-    lightboxCategory.textContent = category || '';
+    if (lightboxImg) {
+      lightboxImg.src = src;
+      lightboxImg.alt = alt || '';
+    }
+    if (lightboxTitle) lightboxTitle.textContent = title || '';
+    if (lightboxCategory) lightboxCategory.textContent = category || '';
 
-    lightbox.classList.add('active');
-    document.body.classList.add('lightbox-open');
-    document.body.style.overflow = 'hidden';
+    activateLightboxModal();
   };
 
   const closeLightbox = () => {
     if (!lightbox) return;
-    lightbox.classList.remove('active');
-    lightbox.classList.remove('is-single-preview');
+    lightbox.classList.remove('active', 'is-single-preview', 'is-logo-preview', 'is-hero-preview');
+    lightbox.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('lightbox-open');
     document.body.style.overflow = '';
+    document.removeEventListener('keydown', trapLightboxFocus);
+
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      try {
+        lastFocusedElement.focus();
+      } catch (err) {}
+      lastFocusedElement = null;
+    }
   };
 
   const showNextImage = () => {
@@ -480,28 +589,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Global bridge for zero-latency fallback script and inline onclick handlers
+  window._openJokerLogoFull = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!lightbox) return;
+    lightbox.classList.remove('is-hero-preview');
+    lightbox.classList.add('is-logo-preview');
+    openSingleImageLightbox(
+      'assets/joker-logo.jpg',
+      'شعار الجوكر للتصوير',
+      'شعار الجوكر للتصوير',
+      'الهوية البصرية الرسمية — استوديو الجوكر للتصوير'
+    );
+  };
+
+  window._openHeroBrandFull = (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!lightbox) return;
+    lightbox.classList.remove('is-logo-preview');
+    lightbox.classList.add('is-hero-preview');
+    openSingleImageLightbox(
+      'assets/hero-brand.jpeg',
+      'لوحة وهوية الجوكر للتصوير',
+      'لوحة وهوية الجوكر للتصوير',
+      'استوديو الجوكر للتصوير — دمياط'
+    );
+  };
+
+  window._closeJokerModalFull = closeLightbox;
+  window.closeJokerModal = closeLightbox;
+  window.openJokerLogo = window._openJokerLogoFull;
+  window.openHeroBrand = window._openHeroBrandFull;
+
   // Logo zoom trigger handlers (Header & Footer)
   const logoTriggers = document.querySelectorAll('.logo-zoom-trigger, .brand-logo');
   logoTriggers.forEach((trigger) => {
-    const handleLogoClick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (typeof window.openJokerLogo === 'function') {
-        window.openJokerLogo(e);
-      } else {
-        openSingleImageLightbox(
-          'assets/joker-logo.jpg',
-          'شعار الجوكر للتصوير',
-          'شعار الجوكر للتصوير',
-          'الهوية البصرية الرسمية — استوديو الجوكر للتصوير'
-        );
-      }
-    };
-
-    trigger.addEventListener('click', handleLogoClick);
+    trigger.addEventListener('click', window.openJokerLogo);
     trigger.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
-        handleLogoClick(e);
+        window.openJokerLogo(e);
       }
     });
   });
@@ -509,20 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Hero visual card zoom
   const visualCard = document.querySelector('.visual-card');
   if (visualCard) {
-    visualCard.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (typeof window.openHeroBrand === 'function') {
-        window.openHeroBrand(e);
-      } else {
-        openSingleImageLightbox(
-          'assets/hero-brand.jpeg',
-          'لوحة وهوية الجوكر للتصوير',
-          'لوحة وهوية الجوكر للتصوير',
-          'استوديو الجوكر للتصوير — دمياط'
-        );
-      }
-    });
+    visualCard.addEventListener('click', window.openHeroBrand);
   }
 
   /* --------------------------------------------------------------------------
