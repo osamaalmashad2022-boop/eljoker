@@ -886,7 +886,7 @@ function initWatermarkTool() {
   if (!wmState.cameraLogoImage) {
     const cameraLogo = new Image();
     cameraLogo.crossOrigin = 'anonymous';
-    cameraLogo.src = 'assets/joker-camera-logo.jpg';
+    cameraLogo.src = 'assets/joker-camera-logo.png';
     cameraLogo.onload = () => {
       wmState.cameraLogoImage = cameraLogo;
       if (wmState.sourceImage && wmState.type === 'cameraLogo') {
@@ -1393,9 +1393,11 @@ function drawSingleWatermark(ctx, w, h, state) {
       ctx.shadowBlur = 10;
       ctx.stroke();
     } else if (state.type === 'cameraLogo') {
-      // Camera Logo — square with subtle shadow, no circular crop
-      ctx.shadowColor = 'rgba(0,0,0,0.7)';
-      ctx.shadowBlur = 12;
+      // Camera Logo — transparent PNG with subtle professional drop shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = Math.max(6, Math.round(logoW * 0.04));
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
       ctx.drawImage(logo, drawX, drawY, logoW, logoH);
     } else {
       ctx.drawImage(logo, drawX, drawY, logoW, logoH);
@@ -1432,8 +1434,10 @@ function drawTiledWatermark(ctx, w, h, state) {
       } else {
         const logo = state.type === 'logo' ? wmState.defaultLogoImage : state.type === 'cameraLogo' ? wmState.cameraLogoImage : wmState.customLogoImage;
         if (logo && logo.complete) {
-          const lSize = Math.max(34, Math.round(w * 0.08 * state.scale));
-          ctx.drawImage(logo, x, y, lSize, lSize);
+          const lAspect = (logo.naturalHeight || logo.height) / (logo.naturalWidth || logo.width) || 1;
+          const lSizeW = Math.max(34, Math.round(w * 0.08 * state.scale));
+          const lSizeH = Math.round(lSizeW * lAspect);
+          ctx.drawImage(logo, x, y, lSizeW, lSizeH);
         }
       }
     }
