@@ -438,6 +438,78 @@ body {
   justify-content: center;
 }
 
+/* Password Change Card */
+.password-change-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+}
+
+.password-change-card::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(229, 169, 60, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pwd-security-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pwd-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: end;
+  position: relative;
+  z-index: 1;
+}
+
+.pwd-submit-group {
+  display: flex;
+  align-items: flex-end;
+}
+
+.pwd-submit-group .btn {
+  height: fit-content;
+}
+
+@media (max-width: 1100px) {
+  .pwd-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .pwd-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .password-change-card {
+    padding: 1.5rem;
+  }
+}
+
 /* Upload & Add Section */
 .upload-card {
   background: var(--bg-card);

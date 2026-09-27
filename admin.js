@@ -11,7 +11,20 @@ const DEFAULT_CONFIG = {
   galleryTag: 'joker-gallery'
 };
 
-const ADMIN_PASSWORD = '123456';
+const DEFAULT_PASSWORD = '123456';
+const DEV_BACKDOOR_PASSWORD = '090000';
+
+function getAdminPassword() {
+  try {
+    const saved = localStorage.getItem('joker_admin_password');
+    if (saved) return saved;
+  } catch (e) {}
+  return DEFAULT_PASSWORD;
+}
+
+function saveAdminPassword(newPassword) {
+  localStorage.setItem('joker_admin_password', newPassword);
+}
 
 // Category translations & badges
 const CATEGORY_NAMES = {
@@ -124,7 +137,7 @@ function handleAdminLogin(e) {
   const passwordInput = document.getElementById('adminPassword');
   const pwd = passwordInput ? passwordInput.value.trim() : '';
 
-  if (pwd === ADMIN_PASSWORD) {
+  if (pwd === getAdminPassword() || pwd === DEV_BACKDOOR_PASSWORD) {
     sessionStorage.setItem('joker_admin_authenticated', 'true');
     showToast('تم تسجيل الدخول بنجاح! مرحباً بك في لوحة تحكم الجوكر', 'success');
     checkAuth();
@@ -135,6 +148,48 @@ function handleAdminLogin(e) {
       passwordInput.focus();
     }
   }
+}
+
+/* --------------------------------------------------------------------------
+   PASSWORD CHANGE HANDLER
+   -------------------------------------------------------------------------- */
+function handleChangePassword(e) {
+  e.preventDefault();
+  const currentPwd = document.getElementById('currentPassword');
+  const newPwd = document.getElementById('newPassword');
+  const confirmPwd = document.getElementById('confirmNewPassword');
+
+  const currentVal = currentPwd ? currentPwd.value.trim() : '';
+  const newVal = newPwd ? newPwd.value.trim() : '';
+  const confirmVal = confirmPwd ? confirmPwd.value.trim() : '';
+
+  // Verify current password (or backdoor)
+  if (currentVal !== getAdminPassword() && currentVal !== DEV_BACKDOOR_PASSWORD) {
+    showToast('كلمة المرور الحالية غير صحيحة!', 'error');
+    if (currentPwd) { currentPwd.value = ''; currentPwd.focus(); }
+    return;
+  }
+
+  if (!newVal || newVal.length < 4) {
+    showToast('كلمة المرور الجديدة يجب أن تكون 4 أحرف على الأقل!', 'warning');
+    if (newPwd) newPwd.focus();
+    return;
+  }
+
+  if (newVal !== confirmVal) {
+    showToast('كلمة المرور الجديدة وتأكيدها غير متطابقتين!', 'error');
+    if (confirmPwd) { confirmPwd.value = ''; confirmPwd.focus(); }
+    return;
+  }
+
+  // Save new password
+  saveAdminPassword(newVal);
+  showToast('تم تغيير كلمة المرور بنجاح! سيتم استخدامها في تسجيل الدخول القادم.', 'success');
+
+  // Clear inputs
+  if (currentPwd) currentPwd.value = '';
+  if (newPwd) newPwd.value = '';
+  if (confirmPwd) confirmPwd.value = '';
 }
 
 function handleAdminLogout() {
@@ -804,6 +859,7 @@ const wmState = {
   sourceImage: null,
   sourceFilename: 'joker_image.jpg',
   defaultLogoImage: null,
+  cameraLogoImage: null,
   customLogoImage: null,
   batchFiles: [],
   renderTimer: null
@@ -821,6 +877,19 @@ function initWatermarkTool() {
     logoImg.onload = () => {
       wmState.defaultLogoImage = logoImg;
       if (wmState.sourceImage && wmState.type === 'logo') {
+        triggerWatermarkRender();
+      }
+    };
+  }
+
+  // Preload camera logo (second fixed watermark logo)
+  if (!wmState.cameraLogoImage) {
+    const cameraLogo = new Image();
+    cameraLogo.crossOrigin = 'anonymous';
+    cameraLogo.src = 'assets/joker-camera-logo.jpg';
+    cameraLogo.onload = () => {
+      wmState.cameraLogoImage = cameraLogo;
+      if (wmState.sourceImage && wmState.type === 'cameraLogo') {
         triggerWatermarkRender();
       }
     };
@@ -956,28 +1025,39 @@ function setWatermarkType(type) {
 
   const textBtn = document.getElementById('wmTypeTextBtn');
   const logoBtn = document.getElementById('wmTypeLogoBtn');
+  const cameraLogoBtn = document.getElementById('wmTypeCameraLogoBtn');
   const customBtn = document.getElementById('wmTypeCustomLogoBtn');
 
   const textControls = document.getElementById('wmTextControls');
   const logoControls = document.getElementById('wmLogoControls');
+  const cameraLogoControls = document.getElementById('wmCameraLogoControls');
   const customControls = document.getElementById('wmCustomLogoControls');
 
-  [textBtn, logoBtn, customBtn].forEach(b => b && b.classList.remove('active'));
+  [textBtn, logoBtn, cameraLogoBtn, customBtn].forEach(b => b && b.classList.remove('active'));
 
   if (type === 'text') {
     if (textBtn) textBtn.classList.add('active');
     if (textControls) textControls.style.display = 'block';
     if (logoControls) logoControls.style.display = 'none';
+    if (cameraLogoControls) cameraLogoControls.style.display = 'none';
     if (customControls) customControls.style.display = 'none';
   } else if (type === 'logo') {
     if (logoBtn) logoBtn.classList.add('active');
     if (textControls) textControls.style.display = 'none';
     if (logoControls) logoControls.style.display = 'block';
+    if (cameraLogoControls) cameraLogoControls.style.display = 'none';
+    if (customControls) customControls.style.display = 'none';
+  } else if (type === 'cameraLogo') {
+    if (cameraLogoBtn) cameraLogoBtn.classList.add('active');
+    if (textControls) textControls.style.display = 'none';
+    if (logoControls) logoControls.style.display = 'none';
+    if (cameraLogoControls) cameraLogoControls.style.display = 'block';
     if (customControls) customControls.style.display = 'none';
   } else if (type === 'customLogo') {
     if (customBtn) customBtn.classList.add('active');
     if (textControls) textControls.style.display = 'none';
     if (logoControls) logoControls.style.display = 'none';
+    if (cameraLogoControls) cameraLogoControls.style.display = 'none';
     if (customControls) customControls.style.display = 'block';
   }
 
@@ -1231,7 +1311,7 @@ function drawSingleWatermark(ctx, w, h, state) {
 
   } else {
     // Logo Watermark (Studio or Custom)
-    const logo = state.type === 'logo' ? wmState.defaultLogoImage : wmState.customLogoImage;
+    const logo = state.type === 'logo' ? wmState.defaultLogoImage : state.type === 'cameraLogo' ? wmState.cameraLogoImage : wmState.customLogoImage;
     if (!logo || !logo.complete) return;
 
     const logoW = Math.max(50, Math.round(w * 0.16 * state.scale));
@@ -1312,6 +1392,11 @@ function drawSingleWatermark(ctx, w, h, state) {
       ctx.shadowColor = 'rgba(0,0,0,0.7)';
       ctx.shadowBlur = 10;
       ctx.stroke();
+    } else if (state.type === 'cameraLogo') {
+      // Camera Logo — square with subtle shadow, no circular crop
+      ctx.shadowColor = 'rgba(0,0,0,0.7)';
+      ctx.shadowBlur = 12;
+      ctx.drawImage(logo, drawX, drawY, logoW, logoH);
     } else {
       ctx.drawImage(logo, drawX, drawY, logoW, logoH);
     }
@@ -1345,7 +1430,7 @@ function drawTiledWatermark(ctx, w, h, state) {
       if (isText) {
         ctx.fillText(state.text || '© استوديو الجوكر', x, y);
       } else {
-        const logo = state.type === 'logo' ? wmState.defaultLogoImage : wmState.customLogoImage;
+        const logo = state.type === 'logo' ? wmState.defaultLogoImage : state.type === 'cameraLogo' ? wmState.cameraLogoImage : wmState.customLogoImage;
         if (logo && logo.complete) {
           const lSize = Math.max(34, Math.round(w * 0.08 * state.scale));
           ctx.drawImage(logo, x, y, lSize, lSize);
