@@ -814,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
      8. SCROLL REVEAL ANIMATIONS
      -------------------------------------------------------------------------- */
   const revealElements = document.querySelectorAll(
-    '.about-card, .service-card, .gallery-item, .contact-card, .social-channels-card, .booking-form-wrapper'
+    '.about-card, .service-card, .gallery-item, .contact-card'
   );
 
   const revealObserver = new IntersectionObserver(

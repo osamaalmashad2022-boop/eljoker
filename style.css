@@ -504,7 +504,7 @@ h1, h2, h3, h4, h5, h6 {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: 3.5rem;
-  align-items: center;
+  align-items: start;
 }
 
 .hero-badge {
@@ -608,7 +608,181 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-wrap: wrap;
   gap: 1.2rem;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Hero Interactive Suite: Social Media & Booking Registration */
+.hero-interactive-suite {
+  padding: 1.4rem 1.6rem;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border-gold);
+  background: linear-gradient(135deg, rgba(20, 24, 34, 0.9) 0%, rgba(12, 14, 19, 0.96) 100%);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6), 0 0 30px rgba(229, 169, 60, 0.12);
+  margin-bottom: 2rem;
+  text-align: right;
+  width: 100%;
+}
+
+.hero-social-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.hero-social-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hero-social-sparkle {
+  color: var(--gold-primary);
+  font-size: 0.95rem;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.hero-social-heading {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.hero-interactive-suite .social-buttons-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 0.75rem !important;
+  flex-direction: row !important;
+}
+
+.hero-interactive-suite .social-btn {
+  padding: 0.55rem 0.75rem;
+  gap: 0.65rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(229, 169, 60, 0.2);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all var(--transition-normal);
+}
+
+.hero-interactive-suite .social-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hero-interactive-suite .social-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hero-interactive-suite .social-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-interactive-suite .social-meta strong {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.hero-interactive-suite .social-meta span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  direction: ltr;
+  text-align: right;
+}
+
+.hero-suite-divider {
+  position: relative;
+  text-align: center;
+  margin: 1rem 0 0.85rem;
+}
+
+.hero-suite-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(229, 169, 60, 0.35), transparent);
+}
+
+.hero-suite-divider span {
+  position: relative;
+  background: #0f1218;
+  padding: 0 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(229, 169, 60, 0.25);
+  display: inline-block;
+}
+
+.hero-booking-wrapper {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.hero-booking-wrapper .booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hero-booking-wrapper .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.hero-booking-wrapper .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.hero-booking-wrapper .form-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.hero-booking-wrapper .form-group input,
+.hero-booking-wrapper .form-group select,
+.hero-booking-wrapper .form-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.88rem;
+  font-family: var(--font-arabic);
+  background: rgba(8, 9, 12, 0.75);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all var(--transition-fast);
+}
+
+.hero-booking-wrapper .form-group input:focus,
+.hero-booking-wrapper .form-group select:focus,
+.hero-booking-wrapper .form-group textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 12px rgba(229, 169, 60, 0.3);
+  background: rgba(14, 17, 24, 0.95);
+}
+
+.hero-booking-wrapper .submit-btn {
+  margin-top: 0.2rem;
+  padding: 0.75rem 1.2rem;
+  font-size: 0.98rem;
 }
 
 .hero-features {
@@ -656,7 +830,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Hero Visual Box */
 .visual-card-wrapper {
-  position: relative;
+  position: sticky;
+  top: 6.5rem;
   perspective: 1000px;
 }
 
@@ -1382,6 +1557,14 @@ h1, h2, h3, h4, h5, h6 {
 /* --------------------------------------------------------------------------
    13. CONTACT SECTION
    -------------------------------------------------------------------------- */
+.contact-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
 .contact-grid {
   display: grid;
   grid-template-columns: 1fr 1.15fr;
@@ -2166,6 +2349,7 @@ body.menu-open .floating-whatsapp,
   .visual-card-wrapper {
     max-width: 500px;
     margin-inline: auto;
+    position: static;
     perspective: none; /* remove 3D context on mobile for clean layout */
     padding-bottom: 2rem; /* space for the repositioned floating badge */
   }
@@ -2188,6 +2372,16 @@ body.menu-open .floating-whatsapp,
 
   .contact-grid {
     grid-template-columns: 1fr;
+  }
+
+  .contact-cards-grid {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin-inline: auto;
+  }
+
+  .hero-social-list {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .cta-container {
@@ -2320,6 +2514,10 @@ body.menu-open .floating-whatsapp,
   .hero-features {
     grid-template-columns: 1fr;
     text-align: right;
+  }
+
+  .hero-social-list {
+    grid-template-columns: 1fr;
   }
 
   .form-row {
